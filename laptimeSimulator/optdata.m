@@ -89,7 +89,7 @@ classdef optdata
     end
 
     methods
-        function obj = optdata(z_opt,u_opt,car)
+        function obj = optdata(car)
             %OPTDATA Construct an instance of this class
             %Calcualtes all variables influencing the car and puts them
             %into structure
@@ -115,21 +115,6 @@ classdef optdata
             obj.YawMomentTV.name = " Yaw moment from TV";
 
 
-
-            obj.vx.data = z_opt(:,1);
-            obj.vy.data = z_opt(:,2);
-            obj.psi.data =z_opt(:,3);
-            obj.dpsi.data =z_opt(:,4);
-            obj.n.data =z_opt(:,5);
-            obj.F_trans = z_opt(:,7);
-            
-            obj.steering_r.data = u_opt(:,2);
-            obj.t  = z_opt(:,6);
-            obj.X.data = cumtrapz(obj.vx.data,obj.t);
-            obj.Y.data = cumtrapz(obj.vy.data,obj.t);
-           
-
-
             %% create front variables
             obj.steering_f.name = "Steering Angle front [deg]";
             obj.alpha_f.name    = "Slip angle front [deg]";
@@ -139,17 +124,7 @@ classdef optdata
             obj.Fx_f.name       = "Longitudinal force front [N]" ;
             obj.Fz_f.name       = "Normal force front [N]" ;
 
-            obj.steering_f.data = u_opt(:,1);
-            obj.Fx_f.data = u_opt(:,3);
-
-            obj.omega_f.data =  (obj.vy.data(1:end-1) + car.l_f.*obj.dpsi.data(1:end-1)).*sin(obj.steering_f.data) + obj.vx.data(1:end-1).*cos(obj.steering_f.data) .* car.wheelradius;
-            slipFrontRad = -atan2((obj.vy.data(1:end-1) + car.l_f.*obj.dpsi.data(1:end-1)).*cos(obj.steering_f.data) - obj.vx.data(1:end-1).*sin(obj.steering_f.data) ,...
-                (obj.vy.data(1:end-1) + car.l_f.*obj.dpsi.data(1:end-1)).*sin(obj.steering_f.data) + obj.vx.data(1:end-1).*cos(obj.steering_f.data));
-            
-            obj.power_f.data = obj.omega_f.data .* obj.Fx_f.data;
-            %obj.Fz_f.data = car.m/2 * car.g - obj.F_trans - obj.Fz_aero.data * (1-car.COP);
-            %obj.Fy_f.data = car.ftire(slipFrontRad,obj.Fz_f.data(1:end-1), car);
-        
+          
             
             %% create rear variables
             obj.steering_r.name = "Steering Angle rear [deg]";
@@ -161,7 +136,7 @@ classdef optdata
             obj.Fz_r.name       = "Normal force rear [N]" ;
 
             if car.tracks == 2
-                carVars = twinTransformations(z_opt,u_opt,car);
+                %carVars = twinTransformations(z_opt,u_opt,car);
                 %obj.ay.data = obj.dpsi.data(1:end-1) .* obj.vx.data(1:end-1);
                 %% create front left variables
                 obj.alpha_fl.name    = "Slip angle front left[deg]";
@@ -172,15 +147,8 @@ classdef optdata
                 obj.Fz_fl.name       = "Normal force front left[N]" ;
                 obj.FxC_fl.name      = "Long force Carrier front left[F]";
                 obj.FyC_fl.name      = "Lateral force Carrier front left[F]";
-                obj.Fx_fl.data       = carVars(:,1);
-                obj.omega_fl.data    = carVars(:,37) / car.wheelradius;
-                obj.power_fl.data    = carVars(:,49);
-                obj.FxC_fl.data      = carVars(:,9);
-                obj.FyC_fl.data      = carVars(:,13);
-                obj.Fz_fl.data       = carVars(:,21);
-                obj.Fy_fl.data       = carVars(:,5);
-
-
+              
+              
 
                 %% create front right variables
                 obj.alpha_fr.name    = "Slip angle front right[deg]";
@@ -191,14 +159,7 @@ classdef optdata
                 obj.Fz_fr.name       = "Normal force front right[N]" ;
                 obj.FxC_fr.name      = "Long force Carrier front right [F]";
                 obj.FyC_fr.name      = "Lateral force Carrier front righ[F]";
-                obj.Fx_fr.data       = carVars(:,2);
-                obj.omega_fr.data    = carVars(:,38) / car.wheelradius;
-                obj.power_fr.data    = carVars(:,50);
-                obj.FxC_fr.data      = carVars(:,10);
-                obj.FyC_fr.data      = carVars(:,14);
-                obj.Fz_fr.data       = carVars(:,22);
-                obj.Fy_fr.data       = carVars(:,6);
-
+               
                 %% create rear left variables
                 obj.alpha_rl.name    = "Slip angle rear left[deg]";
                 obj.omega_rl.name    = "Angular velocity rear keft[rad/s]";
@@ -208,14 +169,7 @@ classdef optdata
                 obj.Fz_rl.name       = "Normal force rear left[N]" ;
                 obj.FxC_rl.name      = "Long force Carrier rear left [F]";
                 obj.FyC_rl.name      = "Lateral force Carrier rear left [F]";
-                obj.Fx_rl.data       = carVars(:,3);
-                obj.omega_rl.data    = carVars(:,39) / car.wheelradius;
-                obj.power_rl.data    = carVars(:,51);
-                obj.FxC_rl.data      = carVars(:,11);
-                obj.FyC_rl.data      = carVars(:,15);
-                obj.Fz_rl.data       = carVars(:,23);
-                obj.Fy_rl.data       = carVars(:,7);
-
+               
                 %% create rear right variables
                 obj.alpha_rr.name    = "Slip angle rear right [deg]";
                 obj.omega_rr.name    = "Angular velocity rear right [rad/s]";
@@ -225,13 +179,7 @@ classdef optdata
                 obj.Fz_rr.name       = "Normal force rear right [N]" ;
                 obj.FxC_rr.name      = "Long force Carrier rear right [F]";
                 obj.FyC_rr.name      = "Lateral force Carrier rear right[F]";
-                obj.Fx_rr.data       = carVars(:,4);
-                obj.omega_rr.data    = carVars(:,40) / car.wheelradius;
-                obj.power_rr.data    = carVars(:,52);
-                obj.FxC_rr.data      = carVars(:,12);
-                obj.FyC_rr.data      = carVars(:,16);
-                obj.Fz_rr.data       = carVars(:,24);
-                obj.Fy_rr.data       = carVars(:,8);
+               
 
                 obj.alpha_fl.name = "Slip angle front left [deg]";
                 obj.alpha_fr.name = "Slip angle front right [deg]";
@@ -239,17 +187,7 @@ classdef optdata
                 obj.alpha_rr.name = "Slip angle rear right [deg]";
 
 
-                %  [obj.alpha_fl.data, obj.alpha_fr.data ,obj.alpha_rl.data, obj.alpha_rr.data] = calWheels(z_opt, u_opt,car);
-                obj.leftFsum.data  = obj.Fx_fl.data + obj.Fx_fl.data;
-                obj.rightFsum.data = obj.Fx_fr.data + obj.Fx_rr.data;
-                obj.sideDiff.data  = obj.rightFsum.data - obj.leftFsum.data;
-
-
-                
-                obj.alpha_fl.data = rad2deg(carVars(:,17));
-                obj.alpha_fr.data = rad2deg(carVars(:,18));
-                obj.alpha_rl.data = rad2deg(carVars(:,19));
-                obj.alpha_rr.data = rad2deg(carVars(:,20));
+           
 
 
                 obj.Fdrag_aero.name = "Drag Force from aero [N]";
@@ -259,62 +197,10 @@ classdef optdata
                 obj.PowerBrake.name =" Power from brakes [W}";
 
 
-                obj.Fz_aero.data = -carVars(:,26);
-                obj.Fdrag_aero.data = carVars(:,25);
-                obj.YawTorque.data = carVars(:,46);
-                obj.YawMomentSteering.data = carVars(:,48);
-                obj.YawMomentTV.data = carVars(:,47);
-                obj.PowerAcp.data = carVars(:,53);
-                obj.PowerBrake.data = carVars(:,54);
-                obj.ax.data =carVars(:,57); %diff(obj.vx.data)./diff(obj.t);
-                obj.ay.data = carVars(:,58);%diff(obj.vy.data)./diff(obj.t);
-                obj.Fbrake.data = carVars(:,59);
+                
                 obj.Fbrake.name = "Brake Force";
 
             end
-
-
-            obj.steering_r.data = u_opt(:,2);
-            obj.Fx_r.data = u_opt(:,4);
-
-            obj.omega_r.data =  (obj.vy.data(1:end-1) - car.l_r.*obj.dpsi.data(1:end-1)).*sin(obj.steering_r.data) + obj.vx.data(1:end-1).*cos(obj.steering_r.data).* car.wheelradius;
-            slipRearRad = -atan2((obj.vy.data(1:end-1) - car.l_r.*obj.dpsi.data(1:end-1)).*cos(obj.steering_r.data) - obj.vx.data(1:end-1).*sin(obj.steering_r.data) ,...
-                (obj.vy.data(1:end-1) - car.l_r.*obj.dpsi.data(1:end-1)).*sin(obj.steering_r.data) + obj.vx.data(1:end-1).*cos(obj.steering_r.data));
-
-            
-
-            obj.power_r.data  = obj.omega_r.data .* obj.Fx_r.data;
-
-%            obj.Fz_r.data = car.m/2 * car.g + obj.F_trans - obj.Fz_aero.data * (car.COP);
-%            obj.Fy_r.data = car.ftire(slipRearRad,obj.Fz_r.data(1:end-1), car);
-            
-
-
-            %% cut last variables in states to make all vectors same length
-            obj.vx.data = z_opt((1:end-1),1);
-            obj.vy.data = z_opt((1:end-1),2);
-            obj.psi.data = z_opt((1:end-1),3);
-            obj.dpsi.data =z_opt((1:end-1),4);
-            obj.n.data =z_opt((1:end-1),5);
-            obj.F_trans = z_opt((1:end-1),7);
-            %obj.Fz_aero.data = 0.5*car.airDensity*car.CL*car.A*obj.vx.data.^2;
-            %% Convert radians to degrees 🤮
-            obj.steering_r.data = rad2deg(obj.steering_r.data);
-            obj.steering_f.data = rad2deg(obj.steering_f.data);
-            obj.alpha_f.data = rad2deg(slipFrontRad);
-            obj.alpha_r.data  = rad2deg(slipRearRad);
-            obj.dpsi.data = rad2deg(obj.dpsi.data);
-            obj.psi.data = mod(rad2deg(obj.psi.data),360); 
-            %obj..name ="" ;
-
-            %vx_opt    = z_opt(:,1); % longitudinal velocity of the car
-            %vy_opt    = z_opt(:,2); % lateral velocity of the car
-            %psi_opt   = z_opt(:,3); % orientation of the tcar
-            %Dpsi_opt  = z_opt(:,4); % angular velocity of the car
-            %n_opt     = z_opt(:,5); % perpendicular position of the car with respect to the track center line
-            %t_opt     = z_opt(:,6); % time vector
-            %Fz_opt    = z_opt(:,7); % Fz vector
-            %Ft_opt    = t_opt(1:end-1); % time vector for the controls - this is just the time vector t_opt shorter by one element as we the controls are not applied at the end of the last control period (we have N values for each control input and N+1 values for each state)
 
             if (0==1)
             obj.plotControls;

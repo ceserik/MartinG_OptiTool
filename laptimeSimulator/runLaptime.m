@@ -340,11 +340,12 @@ if car.tracks == 2
 
         U2 = [U_delta_f;
             U_delta_r;
-            U_Ffl
-            U_Ffr
-            U_Frl
-            U_Frr
-            U_gepd];
+            U_Ffl %+ U_Fbrake/2*car.BrakeBalance
+            U_Ffr %+ U_Fbrake/2*car.BrakeBalance
+            U_Frl %+ U_Fbrake/2*(1-car.BrakeBalance)
+            U_Frr %+ U_Fbrake/2*(1-car.BrakeBalance)
+            U_gepd
+            U_Fbrake];
     else
         U = opti.variable(6, optparams.N); % controls
         U_delta_f  = U(1, :);
@@ -395,7 +396,7 @@ if optparams.init_from_sim
     % Simulate the ride with the controller
     disp("simulating controller drive")
     if car.tracks == 2
-        [s_path, z_path] = ode45(@(s, z) twinRaceCar_path_ODE(s, z, [P_steering*(-z(5));0;0;0; P_vel*(vref - z(1));P_vel*(vref - z(1));0], car, track), s_opt, [vref; 0; th_traj(1); 0; 0; 0; 0; 0]);
+        [s_path, z_path] = ode45(@(s, z) twinRaceCar_path_ODE(s, z, [P_steering*(-z(5));0;0;0; P_vel*(vref - z(1));P_vel*(vref - z(1));0;0], car, track), s_opt, [vref; 0; th_traj(1); 0; 0; 0; 0; 0]);
     else
         [s_path, z_path] = ode45(@(s, z) raceCar_path_ODE(s, z, [P_steering*(-z(5));0;0; P_vel*(vref - z(1));0], car, track), s_opt, [vref; 0; th_traj(1); 0; 0; 0;0]);
     end
@@ -426,6 +427,7 @@ if optparams.init_from_sim
         optparams.deltaf_init = -P_steering*optparams.n_init(1:end-1)/optparams.delta_scale;
         optparams.deltar_init = zeros(1, optparams.N);
         optparams.Ff_init     = zeros(1, optparams.N);
+        
         optparams.Fr_init     = P_vel*(vref - optparams.vx_init(1:end-1))/optparams.F_scale;
         optparams.Yt_init     = zeros(1, optparams.N)/optparams.Yt_scale;
 
@@ -445,7 +447,8 @@ if optparams.init_from_sim
     disp('simulating controller drive')
     ut = optparams.t_init(1:end-1)';
     if car.tracks == 2
-        [~, z_time] = ode45(@(t, z) twinRaceCar_time_ODE(z, [optparams.deltaf_init'*optparams.delta_scale, optparams.deltar_init'*optparams.delta_scale, optparams.Ffl_init'*optparams.F_scale,optparams.Ffr_init'*optparams.F_scale, optparams.Frl_init'*optparams.F_scale,optparams.Frr_init'*optparams.F_scale, optparams.gepd_init'*optparams.gepd_scale], car, t, ut), z_path(:,6), [z_path(1,1:4)'; x_track(1); y_track(1);z_path(1,7)';z_path(1,8)']);
+        [~, z_time] = ode45(@(t, z) twinRaceCar_time_ODE(z, [optparams.deltaf_init'*optparams.delta_scale, optparams.deltar_init'*optparams.delta_scale, optparams.Ffl_init'*optparams.F_scale,optparams.Ffr_init'*optparams.F_scale, optparams.Frl_init'*optparams.F_scale,optparams.Frr_init'*optparams.F_scale, optparams.gepd_init'*optparams.gepd_scale,optparams.Fbrake_init' ...
+            ], car, t, ut), z_path(:,6), [z_path(1,1:4)'; x_track(1); y_track(1);z_path(1,7)';z_path(1,8)']);
     else
         [~, z_time] = ode45(@(t, z) raceCar_time_ODE(z, [optparams.deltaf_init'*optparams.delta_scale, optparams.deltar_init'*optparams.delta_scale, optparams.Ff_init'*optparams.F_scale, optparams.Fr_init'*optparams.F_scale, optparams.Yt_init'], car, t, ut), z_path(:,6), [z_path(1,1:4)'; x_track(1); y_track(1);z_path(1,7)']);
     end
@@ -500,7 +503,7 @@ opti.minimize(z_t(end));
 
 % Dynamic constraints
 if car.tracks == 2
-    f = @(s, z, F) twinRaceCar_path_ODE(s, z, [optparams.delta_scale*F(1); optparams.delta_scale*F(2); optparams.F_scale*F(3); optparams.F_scale*F(4);optparams.F_scale*F(5);optparams.F_scale*F(6); optparams.gepd_scale*F(7)  ], car, track);
+    f = @(s, z, F) twinRaceCar_path_ODE(s, z, [optparams.delta_scale*F(1); optparams.delta_scale*F(2); optparams.F_scale*F(3); optparams.F_scale*F(4);optparams.F_scale*F(5);optparams.F_scale*F(6); optparams.gepd_scale*F(7); F(8)  ], car, track);
 else
     f = @(s, z, F) raceCar_path_ODE(s, z, [optparams.delta_scale*F(1); optparams.delta_scale*F(2); optparams.F_scale*F(3); optparams.F_scale*F(4);optparams.Yt_scale*F(5) ], car, track);
 end
@@ -638,6 +641,8 @@ if car.tracks == 2
     opti.subject_to( -car.Mf_slewRate/optparams.F_scale < diff(U_Ffr)./diff(z_t(1:end-1)) < car.Mf_slewRate/optparams.F_scale);
     opti.subject_to( -car.Mf_slewRate/optparams.F_scale < diff(U_Frl)./diff(z_t(1:end-1)) < car.Mf_slewRate/optparams.F_scale);
     opti.subject_to( -car.Mf_slewRate/optparams.F_scale < diff(U_Frr)./diff(z_t(1:end-1)) < car.Mf_slewRate/optparams.F_scale);
+
+    %opti.subject_to( -20*car.Mf_slewRate/optparams.F_scale < diff(U_Fbrake)./diff(z_t(1:end-1)) < 20*car.Mf_slewRate/optparams.F_scale);
 
     opti.subject_to( -car.Mf_jerk/optparams.F_scale < diff(diff(U_Ffl))./diff(z_t(1:end-2)) < car.Mf_jerk/optparams.F_scale)
     opti.subject_to( -car.Mf_jerk/optparams.F_scale < diff(diff(U_Ffr))./diff(z_t(1:end-2)) < car.Mf_jerk/optparams.F_scale)
@@ -1094,7 +1099,7 @@ end
 u_opt(:,1:2) = optparams.delta_scale*u_opt(:,1:2);
 
 if car.tracks == 2
-    u_opt(:,3:6) = optparams.F_scale*u_opt(:,3:6);
+    u_opt(:,3:6) = optparams.F_scale * u_opt(:,3:6);
     gepd      = optparams.gepd_scale * u_opt(:,7);
     u_opt(:,7) =optparams.gepd_scale * u_opt(:,7);
     u_opt(:,8) =optparams.F_scale * u_opt(:,8);
@@ -1144,6 +1149,7 @@ timeSimCheck(expdata)
 
 %mydata = optdata(z_opt,u_opt,car);
 
+[lol mydata]=twinRaceCar_path_ODE(expdata.s',expdata.z',expdata.u',car,expdata.track)
 %% Animation
 % Show an animation of the car going through the track
 %raceCar_visu(expdata, 'ColoredTrackLine', true, 'ShowTireForce', true);
