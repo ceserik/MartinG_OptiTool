@@ -23,6 +23,7 @@ n = size(z,2);
 
 %Ft = Ft';
 %z = z';
+out = 0;
 if n > 1
     Ft(:,end+1) = 0;
     
@@ -297,6 +298,9 @@ if n >1
     out.PowerBrake.data = PowerBrake;
     out.t = z(6,1:end);
     out.plotControls
+    %out.plotAero
+    %out.plotFz
+    %out.plotPwr
 
 end
 
