@@ -18,10 +18,10 @@ opts = odeset('reltol',1.e-11,'AbsTol',1.e-11);
 %figure(67)
 clf
 
-u_opt(1:end,3) = u_opt(1:end,3) +  u_opt(1:end,8)/2*car.BrakeBalance;
-u_opt(1:end,4) = u_opt(1:end,4) +  u_opt(1:end,8)/2*car.BrakeBalance;
-u_opt(1:end,5) = u_opt(1:end,5) +  u_opt(1:end,8)/2*(1-car.BrakeBalance);
-u_opt(1:end,6) = u_opt(1:end,6) +  u_opt(1:end,8)/2*(1-car.BrakeBalance);
+u_opt(1:end,3) = u_opt(1:end,3) ;%+  u_opt(1:end,8)/2*car.BrakeBalance;
+u_opt(1:end,4) = u_opt(1:end,4) ;%+  u_opt(1:end,8)/2*car.BrakeBalance;
+u_opt(1:end,5) = u_opt(1:end,5) ;%+  u_opt(1:end,8)/2*(1-car.BrakeBalance);
+u_opt(1:end,6) = u_opt(1:end,6) ;%+  u_opt(1:end,8)/2*(1-car.BrakeBalance);
 
 if expdata.car.tracks ==2
     [t_sim, z_sim] = ode15s(@(t, z) twinRaceCar_time_ODE(z, u_opt, car, t, Ft_opt), [t_opt(1) t_opt(end)], [z_opt(1, 1:4) x_car_opt(1) y_car_opt(1) z_opt(1, 7 ) z_opt(1, 8)],opts);

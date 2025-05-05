@@ -1,4 +1,4 @@
-function [time,expdata,opti,sol] = runLaptime(car,trackName)
+function [time,expdata,opti,sol,mydata] = runLaptime(car,trackName)
 %RUNLAPTIME Summary of this function goes here
 %   returns time for lap
 
@@ -264,7 +264,7 @@ track.fcurve = @(s) deal(interp1(s_traj, x_traj,  s), ...
 % Visualize the trajectory
 figure(1)
 clf
-plotTrack(track, track.s0:track.sf, 0)
+plotTrack(track, track.s0:track.sf)
 hold on
 %plot(x_smpl, y_smpl, '.')
 %plot(x_traj, y_traj, '.')
@@ -632,7 +632,8 @@ if car.tracks == 2
         case "4WDTV"
 
         otherwise
-            displ("wrong powertrain type")
+            disp("wrong powertrain type")
+            return
     end
 
     %% limit change rate of change of force
@@ -1129,6 +1130,8 @@ expdata.car = car; % car parameters
 expdata.track = track; % track data
 expdata.optparams = optparams; % optimization parameters
 
+
+
 expName = sprintf('%s_S-%s_D_%s_GEPD_%d', track.name, optparams.steeredAxle, optparams.drivenAxle, car.gepdToggle);
 save(fullfile('results', strcat(expName, '.mat')), 'expdata');
 
@@ -1149,7 +1152,9 @@ timeSimCheck(expdata)
 
 %mydata = optdata(z_opt,u_opt,car);
 
-[lol mydata]=twinRaceCar_path_ODE(expdata.s',expdata.z',expdata.u',car,expdata.track)
+[lol mydata]=twinRaceCar_path_ODE(expdata.s',expdata.z',expdata.u',car,expdata.track,expdata)
+
+
 %% Animation
 % Show an animation of the car going through the track
 %raceCar_visu(expdata, 'ColoredTrackLine', true, 'ShowTireForce', true);
@@ -1157,7 +1162,7 @@ timeSimCheck(expdata)
 
 %% Record a video
 try
-        videoName = fullfile('results', strcat(expName, '.avi'));
+    videoName = fullfile('results', strcat(expName, '.avi'));
     raceCar_visu(expdata, 'FileName', videoName, 'ColoredTrackLine', true, 'ShowTireForce', true);
 end
 %powergen = (mydata.power_fl.data +mydata.power_fr.data + mydata.power_rl.data + mydata.power_rr.data) - sol.value(PowerBrake)'*optparams.PowerBrake_scale, figure,plot(powergen),hold on , plot((mydata.power_fl.data +mydata.power_fr.data + mydata.power_rl.data + mydata.power_rr.data)),plot(sol.value(PowerBrake)'*optparams.PowerBrake_scale);

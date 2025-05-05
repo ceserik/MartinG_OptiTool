@@ -1,4 +1,4 @@
-function [dzds hiddenStates] = twinRaceCar_path_ODE(s, z, u, car, track)
+function [dzds hiddenStates] = twinRaceCar_path_ODE(s, z, u, car, track,expdata)
 % s - arc length along the curve
 % z = [vx; vy; psi; dpsidt; n; t], vx-longitudinal velocity, vy-lateral velocity, psi-angular position of the car with respect to the inertial frame, n-perpendicular distance to the curve, t-time
 % u = [delta_f; delta_r; Ff; Fr], delta_f - steering angle of the front wheel, delta_r - steering angle of the rear wheel, Ff - force acting on the front wheel in the longitudinal direction, Fr - force acting on the rear wheel in the longitudinal direction
@@ -7,8 +7,13 @@ function [dzds hiddenStates] = twinRaceCar_path_ODE(s, z, u, car, track)
 %          [xc, yc, th, C] = fcurve(s) - th=angle of the curve, C=curviture of the curve
 %          width = width of the track in meters
 
-[dzdt hiddenStates] = twinRaceCar_time_ODE(z', u', car);
 
+A = uint8.empty;
+if nargin > 5
+    [dzdt hiddenStates] = twinRaceCar_time_ODE(z', u', car,A,A,expdata);
+else
+    [dzdt hiddenStates] = twinRaceCar_time_ODE(z', u', car,A,A);
+end
 [~, ~, th, C] = track.fcurve(s);
 
 v_x     = z(1,:);

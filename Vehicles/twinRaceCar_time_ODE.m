@@ -1,4 +1,4 @@
-function [dz out] = twinRaceCar_time_ODE(z, u, car, t, t_F)
+function [dz out] = twinRaceCar_time_ODE(z, u, car, t, t_F,expdata)
 % z = [vx; vy; psi; dpsidt; X; Y], vx-longitudinal velocity, vy-lateral velocity, psi-angular position of the car with respect to the inertial frame, X and Y are coordinates of the car in the inertial frame
 % u = [delta_f; delta_r; Ff; Fr], delta_f - steering angle of the front wheel, delta_r - steering angle of the rear wheel (NOT IMPLEMENTED YET), Ff - force acting on the front wheel in the longitudinal direction, Fr - force acting on the rear wheel in the longitudinal direction
 % car - structure containing parameters of the car model
@@ -44,8 +44,8 @@ if n > 1
     v_y  = shiftdim(z(2,:),-1);
     psi  = shiftdim(z(3,:),-1);
     dpsi = shiftdim(z(4,:),-1);
-    X    = z(5,:);
-    Y    = z(6,:);
+    X    = shiftdim(z(5,:),-1);
+    Y    = shiftdim(z(6,:),-1);
     Fz   = shiftdim(z(7,:),-1);
     Ltl  = shiftdim(z(8,:),-1);
 
@@ -297,10 +297,57 @@ if n >1
     out.PowerAcp.data =PowerAcp;
     out.PowerBrake.data = PowerBrake;
     out.t = z(6,1:end);
-    out.plotControls
+    %out.plotControls
     %out.plotAero
     %out.plotFz
     %out.plotPwr
+
+
+    
+
+    out.rotate_f = rotate_f;
+    out.rotate_r = rotate_r;
+
+    delta_f = -delta_f;
+    psi = -psi;
+
+    rotate_f2 = [
+    cos(delta_f) -sin(delta_f) bigZero
+    sin(delta_f) cos(delta_f)  bigZero
+    bigZero            bigZero             bigZero
+    ];
+
+    rotatebody = [
+        cos(psi) -sin(psi) bigZero
+        sin(psi) cos(psi)  bigZero
+        bigZero      bigZero       bigZero
+        ];
+    posCoG = [shiftdim(expdata.carpos(:,1),-2) shiftdim(expdata.carpos(:,2),-2) bigZero];
+    
+    out.posCoG = posCoG;
+    out.posfl = posCoG + mymatmul(pos_fl, rotatebody);
+    out.posfr = posCoG + mymatmul(pos_fr, rotatebody);
+    out.posrl = posCoG + mymatmul(pos_rl, rotatebody);
+    out.posrr = posCoG + mymatmul(pos_rr, rotatebody);
+
+    wheelPos = repmat([0.5 0 0; -0.5 0 0],n,1);
+    wheelPos = pagetranspose(reshape(wheelPos',3,2,[]));
+    wheelPosF = mymatmul(mymatmul(wheelPos,rotate_f2),rotatebody);
+
+    wheelPosR = mymatmul(mymatmul(wheelPos,rotate_r),rotatebody);
+
+    posfl2 = repmat(out.posfl,2,1,1);
+    posfr2 = repmat(out.posfr,2,1,1);
+    posrl2 = repmat(out.posrl,2,1,1);
+    posrr2 = repmat(out.posrr,2,1,1);
+
+    out.edgesfl = posfl2 + wheelPosF ;
+    out.edgesfr = posfr2 + wheelPosF ;
+    out.edgesrl = posrl2 + wheelPosR ;
+    out.edgesrr = posrr2 + wheelPosR ;
+    out.s = expdata.s;
+    out.track = expdata.track;
+    out.expdata = expdata;
 
 end
 

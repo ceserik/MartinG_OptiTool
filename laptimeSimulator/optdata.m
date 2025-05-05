@@ -84,7 +84,22 @@ classdef optdata
         PowerBrake        = esignal
         car;
         Fbrake            = esignal;
+        rotate_f;
+        rotate_r;
 
+        posfl;
+        posfr;
+        posrl;
+        posrr;
+        posCoG;
+
+        edgesfl;
+        edgesfr;
+        edgesrl;
+        edgesrr;
+        s;
+        track;
+        expdata;
 
     end
 
@@ -211,6 +226,7 @@ classdef optdata
             obj.plotLongitudinal;
             obj.plotAero;
             obj.plotFz;
+            
             end
         end
 
