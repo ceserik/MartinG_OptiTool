@@ -18,6 +18,10 @@ torques = axes(3);
 statistics = axes(4);
 fig = axes(5);
 cla(ax)
+
+fig.Resize = 'off';
+
+%%
 plotTrack(mydata.track,mydata.s,0,ax)
 
 plot1       = scatter(ax,mydata.posCoG(1),mydata.posCoG(1),50,'b','filled');
@@ -117,7 +121,7 @@ CoGminimap  = scatter(minimap,mydata.posCoG(1),mydata.posCoG(1),50,'b','filled')
 
 for i = 1:numel(t_visu)-2%length(mydata.s)-1
     %% Main plot
-    plot1.XData = cogX(i);
+        plot1.XData = cogX(i);
     plot1.YData = cogY(i);
 
     plot2.XData = posflx(i);
@@ -174,6 +178,7 @@ for i = 1:numel(t_visu)-2%length(mydata.s)-1
 end
 
 close(vidObj)
+fig.Resize = 'on';
 end
 
 function torquePlot(torque, rect,pos)

@@ -4,6 +4,7 @@ import casadi.*
 %profile clear;
 %profile on;
 addpath('/home/Riso/Downloads/casadimojemoje/')
+addpath(genpath('../'))
 fig = uifigure('Name', 'My App', 'Position', [0 0 1600 900], 'Resize', 'off');
 
 
@@ -59,7 +60,7 @@ controlPanel = uipanel(rightGrid);
 controlPanel.Title = 'Controls';
 
 % Add buttons inside control panel
-controlGrid = uigridlayout(controlPanel, [4, 1]);
+controlGrid = uigridlayout(controlPanel, [6, 1]);
 btnRender = uibutton(controlGrid, 'Text', 'Render');
 
 btnSimulate = uibutton(controlGrid, 'Text', 'Simulate');
@@ -70,51 +71,60 @@ filenameInput = uieditfield(controlGrid, 'text', ...
 
 
 
+
 %powertrainType = char(string(datetime('now', 'Format', 'yyyyMMdd_HHmmss')) + ".avi");
 powertrain = uieditfield(controlGrid, 'text', ...
     'Placeholder', 'e.g. data_run_01.csv', ...
     'Value', "4WD");
 
-
+loadData = uibutton(controlGrid, 'Text', 'Load Data');
+dataFile = uieditfield(controlGrid, 'text','Value', "data.mat");
 
 %% torques
 
 
 
-btnRender.ButtonPushedFcn = @(src, event) render([axMain minimap torques statistics,fig],fig.UserData.mydata,filenameInput);
-
+btnRender.ButtonPushedFcn   = @(src, event) render([axMain minimap torques statistics,fig],fig,filenameInput);
 btnSimulate.ButtonPushedFcn = @(src, event) simulate(fig,powertrain);
+loadData.ButtonPushedFcn    = @(src, event) loaddata(fig,dataFile.Value);
 
-function render(axes,mydata,filename)
+function render(axes,fig,filename)
     if ~endsWith(filename.Value, '.avi', 'IgnoreCase', true)
-        warning('Filename must end with ".avi"');
-        return;
+            warning('Filename must end with ".avi"');
+            return;
+    end
+
+    if isempty(fig.UserData)
+        warning("load data or run Simulation !!!!")
+        return
+    end
+
+    renderVideo(fig.UserData.mydata,axes,filename.Value)
 end
-
-renderVideo(mydata,axes,filename.Value)
-end
-
-
 
 
 function[time,expdata,opti,sol,mydata]  =  simulate(fig,powertrain)
-if string(powertrain.Value) == "4WD" || string(powertrain.Value) == "4WDTV" || string(powertrain.Value) == "2WD"
+    if string(powertrain.Value) == "4WD" || string(powertrain.Value) == "4WDTV" || string(powertrain.Value) == "2WD"
 
-    car = carCreate("HAFO24",0,powertrain.Value);
+      car = carCreate("HAFO24",0,powertrain.Value);
 
-    [time,expdata,opti,sol,mydata] = runLaptime(car,"doubleTurn");
+      [time,expdata,opti,sol,mydata] = runLaptime(car,"doubleTurn");
+      fig.UserData.mydata = mydata;
+      fig.UserData.expdata = expdata;
+    else
+        warning("wrong powertrain, you can use 2WD 4WD 4WDTV")
+        return
+    end
+
+
+end
+
+
+function loaddata(fig,filename)
+    load(filename)
     fig.UserData.mydata = mydata;
-    fig.UserData.expdata = expdata;
-else
-    warning("wrong powertrain")
-
-    return
-end
-
 
 end
-
-
 
 
 
