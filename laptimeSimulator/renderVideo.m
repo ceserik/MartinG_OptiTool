@@ -3,7 +3,7 @@ function  renderVideo(mydata,axes,filename)
 %   Detailed explanation goes here
 %myfig = figure(1)
 
-FPS = 20;
+FPS = 60;
 
 vidObj = VideoWriter(filename);
 vidObj.Quality = 95;
@@ -44,13 +44,13 @@ boxSize = 5;
 %render_time = 30*
 t_visu = mydata.t(1):(1/FPS):mydata.t(end);
 
-interp1(mydata.t(1:end-1), mydata.steering_f.data, t_visu)
+%interp1(mydata.t(1:end-1), mydata.steering_f.data, t_visu);
 
 
 
 
 
-interp1(mydata.t(1:end-1), mydata.steering_f.data, t_visu)
+%interp1(mydata.t(1:end-1), mydata.steering_f.data, t_visu);
 
 %% interpolate CoG
 cogX  = interp1(mydata.t(1:end-1), squeeze(mydata.posCoG(:,1,1:end-1)), t_visu);

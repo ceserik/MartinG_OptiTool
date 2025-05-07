@@ -5,7 +5,7 @@ import casadi.*
 %profile on;
 addpath('/home/Riso/Downloads/casadimojemoje/')
 addpath(genpath('../'))
-fig = uifigure('Name', 'My App', 'Position', [0 0 1600 900], 'Resize', 'off');
+fig = uifigure('Name', 'My App', 'Position', [0 0 1600 900], 'Resize', 'on');
 
 
 % Main grid: 1 row x 2 columns
@@ -121,7 +121,7 @@ end
 
 
 function loaddata(fig,filename)
-    load(filename)
+    load(filename);
     fig.UserData.mydata = mydata;
 
 end
